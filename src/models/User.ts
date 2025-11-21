@@ -25,8 +25,12 @@ const UserSchema = new Schema<UserDocument>(
 );
 
 UserSchema.set('toJSON', {
-  transform: (_, ret) => {
-    ret.id = ret._id.toString();
+  // Use loose types for the transform's `ret` because Mongoose returns a plain JS object
+  // and we deliberately mutate/remove fields here (id, _id, __v, password).
+  transform: (_doc: unknown, ret: any) => {
+    if (ret._id) {
+      ret.id = ret._id.toString();
+    }
     delete ret._id;
     delete ret.__v;
     delete ret.password;

@@ -1,9 +1,9 @@
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { NextResponse } from 'next/server';
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { NextResponse } from "next/server";
 
-export const SESSION_COOKIE = 'vakeel-session';
-export const ROLE_COOKIE = 'vakeel-role';
+export const SESSION_COOKIE = "vakeel-session";
+export const ROLE_COOKIE = "vakeel-role";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const SALT_ROUNDS = 10;
@@ -23,41 +23,50 @@ export async function comparePassword(password: string, hash: string) {
 
 export function signAuthToken(payload: TokenPayload) {
   if (!JWT_SECRET) {
-    throw new Error('JWT_SECRET is not configured.');
+    console.error("❌ auth: JWT_SECRET is not set.");
+    throw new Error("JWT_SECRET is not configured.");
   }
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '2d' });
+
+  try {
+    return jwt.sign(payload as any, JWT_SECRET, { expiresIn: "2d" });
+  } catch (err) {
+    console.error("❌ auth: jwt.sign error:", err);
+    throw err;
+  }
 }
 
 export function setAuthCookies(response: NextResponse, token: string, role: string) {
+  const isProduction = process.env.NODE_ENV === "production";
+
   response.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,
-    sameSite: 'strict',
-    secure: true,
+    sameSite: "strict",
+    secure: isProduction, // only secure in production
     maxAge: 60 * 60 * 24 * 2,
-    path: '/',
+    path: "/",
   });
   response.cookies.set(ROLE_COOKIE, role, {
     httpOnly: true,
-    sameSite: 'strict',
-    secure: true,
+    sameSite: "strict",
+    secure: isProduction,
     maxAge: 60 * 60 * 24 * 2,
-    path: '/',
+    path: "/",
   });
 }
 
 export function clearAuthCookies(response: NextResponse) {
-  response.cookies.set(SESSION_COOKIE, '', {
+  response.cookies.set(SESSION_COOKIE, "", {
     httpOnly: true,
-    sameSite: 'strict',
-    secure: true,
+    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production",
     maxAge: 0,
-    path: '/',
+    path: "/",
   });
-  response.cookies.set(ROLE_COOKIE, '', {
+  response.cookies.set(ROLE_COOKIE, "", {
     httpOnly: true,
-    sameSite: 'strict',
-    secure: true,
+    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production",
     maxAge: 0,
-    path: '/',
+    path: "/",
   });
 }
