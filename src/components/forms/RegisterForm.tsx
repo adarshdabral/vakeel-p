@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useAuthStore } from '@/store/auth-store';
@@ -15,6 +16,7 @@ export function RegisterForm({ role }: RegisterFormProps) {
   const pushToast = useNotificationStore((state) => state.pushToast);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const router = useRouter();
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [event.target.name]: event.target.value }));
@@ -26,6 +28,13 @@ export function RegisterForm({ role }: RegisterFormProps) {
     try {
       await register({ ...form, role: role === 'client' ? 'client' : 'lawyer' });
       pushToast({ title: 'OTP sent', description: 'Please verify the code sent to your email.', variant: 'info' });
+      // Redirect after registration for client, admin, and lawyer
+      if (role === 'client') {
+        router.push('/user/dashboard');
+      
+      } else if (role === 'lawyer') {
+        router.push('/lawyer/profile');
+      }
     } catch (error) {
       pushToast({ title: 'Could not register', description: (error as Error).message, variant: 'error' });
     } finally {

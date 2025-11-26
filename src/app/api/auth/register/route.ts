@@ -1,6 +1,8 @@
+// app/api/auth/register/route.ts
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { UserModel } from "@/models/User";
+import { LawyerModel } from "@/models/Lawyer";
 import { hashPassword } from "@/lib/auth";
 
 export async function POST(request: Request) {
@@ -19,7 +21,7 @@ export async function POST(request: Request) {
       role: body?.role,
     });
 
-    const { name, email, password, role = "client", city, category } = body;
+    const { name, email, password, role = "client" } = body;
 
     // Input validation
     if (!name || !email || !password) {
@@ -99,11 +101,9 @@ export async function POST(request: Request) {
       console.log("🛠 register: creating user", { name, email });
       user = await UserModel.create({
         name,
-        email,
+        email: String(email).toLowerCase(),
         password: hashed,
         role,
-        city,
-        category,
       });
       console.log("✅ register: user created", user?.id ?? user?._id);
     } catch (createError: any) {
@@ -130,16 +130,43 @@ export async function POST(request: Request) {
       );
     }
 
+    // If user is lawyer → create a lawyer profile with reference to userId
+    if (role === "lawyer") {
+      try {
+        await LawyerModel.create({
+          userId: user._id,
+          specialization: "",
+          category: "",
+          experience: 0,
+          city: "",
+          languages: [],
+          price: 0,
+          availability: { dates: [], slots: [] },
+          rating: { average: 0, totalRatings: 0, sum: 0 },
+          profileStatus: "processing",
+        });
+        console.log("👨‍⚖️ Lawyer profile created for user:", user._id.toString());
+      } catch (lawyerErr: any) {
+        // Log but do not block registration (you can choose to fail instead)
+        console.error("❌ register: Failed to create lawyer profile:", lawyerErr);
+      }
+    }
+
     // Success
     try {
       const safeUser = typeof user?.toJSON === "function" ? user.toJSON() : user;
-      return NextResponse.json(
+      // Generate JWT and set cookies
+      const { signAuthToken, setAuthCookies } = await import("@/lib/auth");
+      const token = signAuthToken({ sub: user._id.toString(), role: user.role });
+      const response = NextResponse.json(
         {
           user: safeUser,
           message: "Registration successful.",
         },
         { status: 201 }
       );
+      setAuthCookies(response, token, user.role);
+      return response;
     } catch (toJSONError: any) {
       console.warn("⚠️ register: toJSON error, returning raw user:", toJSONError);
       return NextResponse.json({ user, message: "Registration successful." }, { status: 201 });

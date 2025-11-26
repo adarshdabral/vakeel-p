@@ -80,5 +80,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       description: 'You have been logged out securely.',
       variant: 'info',
     });
+    if (typeof window !== 'undefined') {
+      window.location.href = '/auth/login';
+    }
   },
 }));
