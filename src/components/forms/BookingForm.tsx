@@ -9,11 +9,12 @@ import type { Lawyer } from '@/types/lawyer';
 
 interface BookingFormProps {
   lawyer: Lawyer;
-  onSubmit: (payload: { slot: string; notes: string; mode: 'video' | 'phone' }) => Promise<void> | void;
+  onSubmit: (payload: { date: string; slot: string; notes: string; mode: 'video' | 'phone' }) => Promise<void> | void;
 }
 
 export function BookingForm({ lawyer, onSubmit }: BookingFormProps) {
-  const [slot, setSlot] = useState(lawyer.availability?.[0] ?? '');
+  const [date, setDate] = useState(lawyer.availability?.dates?.[0] ?? '');
+  const [slot, setSlot] = useState(lawyer.availability?.slots?.[0] ?? '');
   const [notes, setNotes] = useState('');
   const [mode, setMode] = useState<'video' | 'phone'>('video');
   const [loading, setLoading] = useState(false);
@@ -21,23 +22,44 @@ export function BookingForm({ lawyer, onSubmit }: BookingFormProps) {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLoading(true);
-    await onSubmit({ slot, notes, mode });
+    await onSubmit({ date, slot, notes, mode });
     setLoading(false);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="space-y-2">
-        <p className="text-sm font-medium text-accent">Preferred slot</p>
+        <p className="text-sm font-medium text-accent">Preferred date</p>
         <div className="flex flex-wrap gap-2">
-          {lawyer.availability?.map((value) => (
+          {lawyer.availability?.dates?.map((dateValue: string) => (
             <button
               type="button"
-              key={value}
-              className={`rounded-full px-4 py-2 text-sm ${value === slot ? 'bg-primary text-white' : 'bg-secondary text-accent'}`}
-              onClick={() => setSlot(value)}
+              key={dateValue}
+              className={`rounded-full px-4 py-2 text-sm ${dateValue === date ? 'bg-primary text-white' : 'bg-secondary text-accent'}`}
+              onClick={() => setDate(dateValue)}
             >
-              {value}
+              {dateValue}
+            </button>
+          ))}
+        </div>
+        <Input
+          className="mt-2"
+          placeholder="Or choose a custom date (yyyy-mm-dd)"
+          value={date}
+          onChange={(event) => setDate(event.target.value)}
+        />
+      </div>
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-accent">Preferred slot</p>
+        <div className="flex flex-wrap gap-2">
+          {lawyer.availability?.slots?.map((slotValue: string) => (
+            <button
+              type="button"
+              key={slotValue}
+              className={`rounded-full px-4 py-2 text-sm ${slotValue === slot ? 'bg-primary text-white' : 'bg-secondary text-accent'}`}
+              onClick={() => setSlot(slotValue)}
+            >
+              {slotValue}
             </button>
           ))}
         </div>
@@ -68,7 +90,7 @@ export function BookingForm({ lawyer, onSubmit }: BookingFormProps) {
           onChange={(event) => setNotes(event.target.value)}
         />
       </div>
-      <Button type="submit" className="w-full" disabled={!slot || loading}>
+      <Button type="submit" className="w-full" disabled={!date || !slot || loading}>
         {loading ? 'Scheduling…' : 'Confirm booking'}
       </Button>
     </form>
