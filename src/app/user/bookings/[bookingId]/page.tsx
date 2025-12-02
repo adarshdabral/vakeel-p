@@ -1,36 +1,74 @@
+'use client';
+
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { bookings, lawyers, sessions } from '@/data/mock';
 import { formatDate } from '@/utils/formatDate';
+import { apiClient } from '@/lib/axios';
 
-interface PageProps {
-  params: { bookingId: string };
-}
+export default function BookingDetailsPage() {
+  const params = useParams();
+  const bookingId = params?.bookingId as string;
 
-export default function BookingDetailsPage({ params }: PageProps) {
-  const booking = bookings.find((entry) => entry.id === params.bookingId);
-  if (!booking) notFound();
-  const lawyer = lawyers.find((entry) => entry.id === booking.lawyerId);
-  const session = sessions.find((entry) => entry.bookingId === booking.id);
+  const [booking, setBooking] = useState<any>(null);
+  const [lawyer, setLawyer] = useState<any>(null);
+  const [lawyerUser, setLawyerUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!bookingId) return;
+    setLoading(true);
+    setError(null);
+    apiClient
+      .get(`/api/bookings/${bookingId}`)
+      .then(async (res: any) => {
+        const bookingData = res.data?.data;
+        setBooking(bookingData);
+        if (bookingData?.lawyerId) {
+          try {
+            const lawyerRes = await apiClient.get(`/api/lawyers/${bookingData.lawyerId}`);
+            const lawyerData = lawyerRes.data?.data || lawyerRes.data;
+            setLawyer(lawyerData);
+            setLawyerUser(lawyerData?.user || null);
+          } catch {
+            setLawyer(null);
+          }
+        }
+      })
+      .catch(() => {
+        setError('Booking not found');
+      })
+      .finally(() => setLoading(false));
+  }, [bookingId]);
+
+  if (loading) {
+    return <p className="text-slate-400">Loading booking details...</p>;
+  }
+  if (error || !booking) {
+    return <p className="text-red-500">{error || 'Booking not found'}</p>;
+  }
+
+  const lawyerName = lawyerUser?.name || lawyer?.name || 'Assigned Lawyer';
 
   return (
     <section className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-sm uppercase text-primary">Booking #{booking.id}</p>
-          <h1 className="font-display text-3xl text-accent">{lawyer?.name}</h1>
+          <p className="text-sm uppercase text-primary">Booking #{booking._id || booking.id}</p>
+          <h1 className="font-display text-3xl text-accent">{lawyerName}</h1>
           <p className="text-slate-500">Status: {booking.status}</p>
         </div>
-        {session ? (
+        {booking.status === 'active' && (
           <div className="flex gap-3">
             <Button asChild variant="secondary">
-              <Link href={`/user/session/${session.id}/otp`}>Join session</Link>
+              <Link href={`/user/session/${booking._id || booking.id}/otp`}>Join session</Link>
             </Button>
             <Button variant="outline">Reschedule</Button>
           </div>
-        ) : null}
+        )}
       </header>
       <Card>
         <CardHeader>
@@ -38,9 +76,9 @@ export default function BookingDetailsPage({ params }: PageProps) {
           <CardDescription>Track timelines at a glance.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3 text-sm text-slate-500">
-          <p>When: {booking.scheduledFor ? formatDate(booking.scheduledFor) : 'To be confirmed'}</p>
-          <p>Matter: {booking.matter}</p>
-          <p>Fee: ₹{booking.amount}</p>
+          <p>Date: {booking.date || 'To be confirmed'}</p>
+          <p>Slot: {booking.slot || '-'}</p>
+          <p>Note: {booking.note || '-'}</p>
         </CardContent>
       </Card>
     </section>

@@ -1,3 +1,4 @@
+import { use } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -6,11 +7,12 @@ import { bookings, users, sessions } from '@/data/mock';
 import { formatDate } from '@/utils/formatDate';
 
 interface PageProps {
-  params: { bookingId: string };
+  params: Promise<{ bookingId: string }>;
 }
 
 export default function LawyerBookingDetails({ params }: PageProps) {
-  const booking = bookings.find((entry) => entry.id === params.bookingId);
+  const { bookingId } = use(params);
+  const booking = bookings.find((entry) => entry.id === bookingId);
   if (!booking) notFound();
   const client = users.find((entry) => entry.id === booking.clientId);
   const session = sessions.find((entry) => entry.bookingId === booking.id);

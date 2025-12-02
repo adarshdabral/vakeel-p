@@ -43,8 +43,6 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
     );
 
   } catch (error: any) {
-    console.error("Error fetching lawyer:", error.message);
-
     return NextResponse.json(
       { error: "Server Error", details: error.message },
       { status: 500 }

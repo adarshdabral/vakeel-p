@@ -34,7 +34,6 @@ export async function POST(request: Request) {
 
     return response;
   } catch (error) {
-    console.error('Login error', error);
     return NextResponse.json({ message: 'Unable to login right now.' }, { status: 500 });
   }
 }

@@ -8,7 +8,7 @@ const BookingSchema = new Schema(
     slot: { type: String, required: true }, // e.g. "13:00 - 13:30"
     status: {
       type: String,
-      enum: ['active', 'rejected'],
+      enum: ['pending', 'confirmed', 'active', 'rejected', 'cancelled', 'completed'],
       default: 'active',
     },
     note: { type: String, default: '' },

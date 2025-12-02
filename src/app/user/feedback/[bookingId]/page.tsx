@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { Star } from 'lucide-react';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -9,10 +9,11 @@ import { Button } from '@/components/ui/Button';
 import { useNotificationStore } from '@/store/notification-store';
 
 interface PageProps {
-  params: { bookingId: string };
+  params: Promise<{ bookingId: string }>;
 }
 
 export default function FeedbackPage({ params }: PageProps) {
+  const { bookingId } = use(params);
   const [rating, setRating] = useState(5);
   const [notes, setNotes] = useState('');
   const pushToast = useNotificationStore((state) => state.pushToast);
@@ -28,7 +29,7 @@ export default function FeedbackPage({ params }: PageProps) {
     <section className="space-y-6">
       <header>
         <h1 className="font-display text-3xl text-accent">Share feedback</h1>
-        <p className="text-slate-500">Booking #{params.bookingId}</p>
+        <p className="text-slate-500">Booking #{bookingId}</p>
       </header>
       <Card>
         <CardHeader>

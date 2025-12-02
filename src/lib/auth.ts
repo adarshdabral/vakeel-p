@@ -23,14 +23,12 @@ export async function comparePassword(password: string, hash: string) {
 
 export function signAuthToken(payload: TokenPayload) {
   if (!JWT_SECRET) {
-    console.error("❌ auth: JWT_SECRET is not set.");
     throw new Error("JWT_SECRET is not configured.");
   }
 
   try {
     return jwt.sign(payload as any, JWT_SECRET, { expiresIn: "2d" });
   } catch (err) {
-    console.error("❌ auth: jwt.sign error:", err);
     throw err;
   }
 }
@@ -40,14 +38,14 @@ export function setAuthCookies(response: NextResponse, token: string, role: stri
 
   response.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,
-    sameSite: "strict",
+    sameSite: "lax",
     secure: isProduction, // only secure in production
     maxAge: 60 * 60 * 24 * 2,
     path: "/",
   });
   response.cookies.set(ROLE_COOKIE, role, {
     httpOnly: true,
-    sameSite: "strict",
+    sameSite: "lax",
     secure: isProduction,
     maxAge: 60 * 60 * 24 * 2,
     path: "/",
@@ -57,14 +55,14 @@ export function setAuthCookies(response: NextResponse, token: string, role: stri
 export function clearAuthCookies(response: NextResponse) {
   response.cookies.set(SESSION_COOKIE, "", {
     httpOnly: true,
-    sameSite: "strict",
+    sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     maxAge: 0,
     path: "/",
   });
   response.cookies.set(ROLE_COOKIE, "", {
     httpOnly: true,
-    sameSite: "strict",
+    sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     maxAge: 0,
     path: "/",

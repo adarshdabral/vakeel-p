@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { OTPInput } from '@/components/forms/OTPInput';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -9,15 +9,16 @@ import { useSessionStore } from '@/store/session-store';
 import { useNotificationStore } from '@/store/notification-store';
 
 interface PageProps {
-  params: { sessionId: string };
+  params: Promise<{ sessionId: string }>;
 }
 
 export default function SessionOtpPage({ params }: PageProps) {
   const router = useRouter();
+  const { sessionId } = use(params);
   const setSession = useSessionStore((state) => state.setSession);
   const verifyOtp = useSessionStore((state) => state.verifyOtp);
   const pushToast = useNotificationStore((state) => state.pushToast);
-  const session = sessions.find((entry) => entry.id === params.sessionId);
+  const session = sessions.find((entry) => entry.id === sessionId);
 
   useEffect(() => {
     if (session) {
@@ -29,7 +30,7 @@ export default function SessionOtpPage({ params }: PageProps) {
     const ok = verifyOtp(code);
     if (ok) {
       pushToast({ title: 'OTP verified', description: 'Launching secure call.', variant: 'success' });
-      router.push(`/user/session/${params.sessionId}/call`);
+      router.push(`/user/session/${sessionId}/call`);
     } else {
       pushToast({ title: 'Invalid OTP', description: 'Please try again.', variant: 'error' });
     }

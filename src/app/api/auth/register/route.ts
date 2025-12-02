@@ -6,26 +6,17 @@ import { LawyerModel } from "@/models/Lawyer";
 import { hashPassword } from "@/lib/auth";
 
 export async function POST(request: Request) {
-  console.log("📩 [POST] /api/auth/register called");
 
   try {
     const body = await request.json().catch((err) => {
-      console.error("❌ register: body parse error:", err);
       throw new Error("Invalid JSON body");
     });
 
-    console.log("📥 register body:", {
-      name: body?.name,
-      email: body?.email,
-      passwordProvided: Boolean(body?.password),
-      role: body?.role,
-    });
 
     const { name, email, password, role = "client" } = body;
 
     // Input validation
     if (!name || !email || !password) {
-      console.warn("⚠️ register: validation failed", { name, email, password: Boolean(password) });
       return NextResponse.json(
         {
           message: "Validation failed.",
@@ -39,9 +30,7 @@ export async function POST(request: Request) {
     // DB connection
     try {
       await connectToDatabase();
-      console.log("✅ register: DB connection OK");
     } catch (dbError: any) {
-      console.error("❌ register: Database connection error:", dbError);
       return NextResponse.json(
         {
           message: "Failed to connect to the database.",
@@ -54,11 +43,9 @@ export async function POST(request: Request) {
     // Check if user exists
     try {
       const lookupEmail = String(email).toLowerCase();
-      console.log("🔍 register: checking existing user for", lookupEmail);
       const existingUser = await UserModel.findOne({ email: lookupEmail }).lean().exec();
 
       if (existingUser) {
-        console.warn("⚠️ register: duplicate email:", lookupEmail);
         return NextResponse.json(
           {
             message: "Duplicate email.",
@@ -68,7 +55,6 @@ export async function POST(request: Request) {
         );
       }
     } catch (lookupError: any) {
-      console.error("❌ register: User lookup error:", lookupError);
       return NextResponse.json(
         {
           message: "Failed to check for existing user.",
@@ -81,11 +67,8 @@ export async function POST(request: Request) {
     // Password hashing
     let hashed: string;
     try {
-      console.log("🔐 register: hashing password");
       hashed = await hashPassword(password);
-      console.log("🔐 register: password hashed");
     } catch (hashError: any) {
-      console.error("❌ register: Password hashing error:", hashError);
       return NextResponse.json(
         {
           message: "Password hashing failed.",
@@ -98,16 +81,13 @@ export async function POST(request: Request) {
     // Creating user
     let user;
     try {
-      console.log("🛠 register: creating user", { name, email });
       user = await UserModel.create({
         name,
         email: String(email).toLowerCase(),
         password: hashed,
         role,
       });
-      console.log("✅ register: user created", user?.id ?? user?._id);
     } catch (createError: any) {
-      console.error("❌ register: User creation error:", createError);
 
       // Detect duplicate key at DB level (race condition)
       if (createError?.code === 11000) {
@@ -145,10 +125,8 @@ export async function POST(request: Request) {
           rating: { average: 0, totalRatings: 0, sum: 0 },
           profileStatus: "processing",
         });
-        console.log("👨‍⚖️ Lawyer profile created for user:", user._id.toString());
       } catch (lawyerErr: any) {
         // Log but do not block registration (you can choose to fail instead)
-        console.error("❌ register: Failed to create lawyer profile:", lawyerErr);
       }
     }
 
@@ -168,11 +146,9 @@ export async function POST(request: Request) {
       setAuthCookies(response, token, user.role);
       return response;
     } catch (toJSONError: any) {
-      console.warn("⚠️ register: toJSON error, returning raw user:", toJSONError);
       return NextResponse.json({ user, message: "Registration successful." }, { status: 201 });
     }
   } catch (error: any) {
-    console.error("🔥 register: Unexpected server error:", error);
     return NextResponse.json(
       {
         message: "Unexpected server error.",

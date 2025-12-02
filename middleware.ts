@@ -1,50 +1,57 @@
+// --- Universal route protection middleware ---
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const ROLE_COOKIE = 'vakeel-role';
-const SESSION_COOKIE = 'vakeel-session';
-
-const roleToHome: Record<string, string> = {
-  client: '/user/dashboard',
-  user: '/user/dashboard',
-  lawyer: '/lawyer/dashboard',
-  admin: '/admin/dashboard',
-};
-
-const protectedMatchers = [
-  ['/user', 'user'],
-  ['/lawyer', 'lawyer'],
-  ['/admin', 'admin'],
+// List of routes that do NOT require authentication
+const PUBLIC_PATHS = [
+  '/',
+  '/auth/login',
+  '/auth/register',
+  '/auth/reset-password',
+  '/auth/verify',
 ];
 
+
 export function middleware(request: NextRequest) {
-  const role = request.cookies.get(ROLE_COOKIE)?.value;
-  const session = request.cookies.get(SESSION_COOKIE)?.value;
   const { pathname } = request.nextUrl;
 
-  for (const [prefix, expectedRole] of protectedMatchers) {
-    if (pathname.startsWith(prefix)) {
-      if (!role || !session) {
-        const url = new URL('/auth/login', request.url);
-        url.searchParams.set('next', pathname);
-        return NextResponse.redirect(url);
-      }
-      if (expectedRole === 'user' && role !== 'client') {
-        return NextResponse.redirect(new URL(roleToHome[role] ?? '/', request.url));
-      }
-      if (expectedRole !== 'user' && role !== expectedRole) {
-        return NextResponse.redirect(new URL(roleToHome[role] ?? '/', request.url));
-      }
-    }
+  // Allow public paths
+  if (PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(path + '/'))) {
+    return NextResponse.next();
   }
 
-  if (pathname.startsWith('/auth') && role && session) {
-    return NextResponse.redirect(new URL(roleToHome[role] ?? '/', request.url));
+  // Allow static assets and next internals
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/favicon') ||
+    pathname.match(/\.(js|css|png|jpg|jpeg|svg|gif|webp)$/)
+  ) {
+    return NextResponse.next();
+  }
+
+  // Check for session cookie
+  const token = request.cookies.get('vakeel-session');
+
+  if (!token) {
+    const loginUrl = new URL('/auth/login', request.url);
+    loginUrl.searchParams.set('redirectTo', pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/user/:path*', '/lawyer/:path*', '/admin/:path*', '/auth/:path*'],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder
+     */
+    '/((?!_next/static|_next/image|favicon.ico|public).*)',
+  ],
 };
+
+

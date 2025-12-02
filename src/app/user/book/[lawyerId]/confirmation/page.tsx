@@ -1,3 +1,4 @@
+import { use } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { CheckCircle2 } from 'lucide-react';
@@ -6,11 +7,12 @@ import { Button } from '@/components/ui/Button';
 import { lawyers, sessions } from '@/data/mock';
 
 interface PageProps {
-  params: { lawyerId: string };
+  params: Promise<{ lawyerId: string }>;
 }
 
 export default function ConfirmationPage({ params }: PageProps) {
-  const lawyer = lawyers.find((entry) => entry.id === params.lawyerId);
+  const { lawyerId } = use(params);
+  const lawyer = lawyers.find((entry) => entry.id === lawyerId);
   if (!lawyer) notFound();
   const session = sessions[0];
 

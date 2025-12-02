@@ -1,5 +1,6 @@
 // types/lawyer.ts
 export interface Lawyer {
+  name?: string;
   id?: string;
   userId?: string;
   specialization?: string;

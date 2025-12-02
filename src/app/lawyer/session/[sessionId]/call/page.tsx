@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, use } from 'react';
 import { VideoPlayer } from '@/components/video/VideoPlayer';
 import { ChatBox } from '@/components/video/ChatBox';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -8,11 +8,12 @@ import { sessions } from '@/data/mock';
 import { useSessionStore } from '@/store/session-store';
 
 interface PageProps {
-  params: { sessionId: string };
+  params: Promise<{ sessionId: string }>;
 }
 
 export default function LawyerCallPage({ params }: PageProps) {
-  const session = sessions.find((entry) => entry.id === params.sessionId);
+  const { sessionId } = use(params);
+  const session = sessions.find((entry) => entry.id === sessionId);
   const setCallState = useSessionStore((state) => state.setCallState);
 
   useEffect(() => {

@@ -34,7 +34,6 @@ export const getSocket = () => {
       transports: ['websocket'],
     });
   } catch (error) {
-    console.warn('Socket initialization failed, falling back to mock emitter', error);
     socket = {
       on: () => socket,
       off: () => socket,

@@ -1,5 +1,6 @@
 'use client';
 
+import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -8,13 +9,14 @@ import { apiClient } from '@/lib/axios';
 import { useNotificationStore } from '@/store/notification-store';
 
 interface PageProps {
-  params: { lawyerId: string };
+  params: Promise<{ lawyerId: string }>;
 }
 
 export default function PaymentPage({ params }: PageProps) {
   const router = useRouter();
   const pushToast = useNotificationStore((state) => state.pushToast);
-  const lawyer = lawyers.find((entry) => entry.id === params.lawyerId);
+  const { lawyerId } = use(params);
+  const lawyer = lawyers.find((entry) => entry.id === lawyerId);
 
   if (!lawyer) {
     return <p className="text-slate-500">We could not find that lawyer.</p>;

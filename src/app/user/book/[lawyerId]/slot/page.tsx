@@ -56,7 +56,6 @@ export default function SlotSelectionPage({ params }: PageProps) {
       notes: payload.notes,
       mode: payload.mode,
     };
-    console.log('Booking payload:', bookingPayload);
     await apiClient.post('/api/bookings', bookingPayload);
     pushToast({ title: 'Slot locked', description: 'Proceed to payment to confirm booking.', variant: 'success' });
     router.push(`/user/book/${lawyerId}/payment`);

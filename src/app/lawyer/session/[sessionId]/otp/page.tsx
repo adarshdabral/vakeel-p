@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { OTPInput } from '@/components/forms/OTPInput';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -9,15 +9,16 @@ import { useSessionStore } from '@/store/session-store';
 import { useNotificationStore } from '@/store/notification-store';
 
 interface PageProps {
-  params: { sessionId: string };
+  params: Promise<{ sessionId: string }>;
 }
 
 export default function LawyerSessionOtpPage({ params }: PageProps) {
   const router = useRouter();
+  const { sessionId } = use(params);
   const pushToast = useNotificationStore((state) => state.pushToast);
   const setSession = useSessionStore((state) => state.setSession);
   const verifyOtp = useSessionStore((state) => state.verifyOtp);
-  const session = sessions.find((entry) => entry.id === params.sessionId);
+  const session = sessions.find((entry) => entry.id === sessionId);
 
   useEffect(() => {
     if (session) {
@@ -28,7 +29,7 @@ export default function LawyerSessionOtpPage({ params }: PageProps) {
   const handleVerify = (code: string) => {
     if (verifyOtp(code)) {
       pushToast({ title: 'OTP matched', description: 'Launching client call.', variant: 'success' });
-      router.push(`/lawyer/session/${params.sessionId}/call`);
+      router.push(`/lawyer/session/${sessionId}/call`);
     } else {
       pushToast({ title: 'Incorrect OTP', description: 'Please re-check.', variant: 'error' });
     }
