@@ -13,6 +13,7 @@ const BookingSchema = new Schema(
     },
     note: { type: String, default: '' },
     rejectionReason: { type: String, default: '' },
+    otp: { type: String, required: true, unique: true }, // 6-digit unique OTP
   },
   { timestamps: true }
 );

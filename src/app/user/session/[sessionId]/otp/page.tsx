@@ -27,12 +27,21 @@ export default function SessionOtpPage({ params }: PageProps) {
   }, [session, setSession]);
 
   const handleVerify = async (code: string) => {
-    const ok = verifyOtp(code);
-    if (ok) {
-      pushToast({ title: 'OTP verified', description: 'Launching secure call.', variant: 'success' });
-      router.push(`/user/session/${sessionId}/call`);
-    } else {
-      pushToast({ title: 'Invalid OTP', description: 'Please try again.', variant: 'error' });
+    try {
+      const res = await fetch(`/api/session/${sessionId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ otp: code }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        pushToast({ title: 'OTP verified', description: 'Launching secure call.', variant: 'success' });
+        router.push(`/user/session/${sessionId}/call`);
+      } else {
+        pushToast({ title: 'Invalid OTP', description: 'Please try again.', variant: 'error' });
+      }
+    } catch (err) {
+      pushToast({ title: 'Error', description: 'Could not verify OTP.', variant: 'error' });
     }
   };
 

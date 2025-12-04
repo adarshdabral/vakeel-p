@@ -53,7 +53,7 @@ export default function SlotSelectionPage({ params }: PageProps) {
       lawyerId: lawyerId,
       date: payload.date,
       slot: payload.slot,
-      notes: payload.notes,
+      note: payload.notes, // Fix: send as note
       mode: payload.mode,
     };
     await apiClient.post('/api/bookings', bookingPayload);

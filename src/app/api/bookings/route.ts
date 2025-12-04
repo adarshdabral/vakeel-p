@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import { BookingModel } from '@/models/Booking';
 import { verifyAuth, unauthorizedResponse, forbiddenResponse, hasRole } from '@/lib/apiAuth';
+import { generateUniqueOTP } from '@/lib/generateOTP';
 
 // GET /api/bookings?clientId=xxx or ?lawyerId=xxx
 export async function GET(request: Request) {
@@ -57,11 +58,14 @@ export async function POST(request: Request) {
   await connectToDatabase();
   const payload = await request.json();
   const { lawyerId, date, slot, note } = payload;
-  
+
   // Validate required fields
   if (!lawyerId || !date || !slot) {
     return NextResponse.json({ error: 'Missing required fields: lawyerId, date, slot' }, { status: 400 });
   }
+
+  // Generate a unique 6-digit OTP
+  const otp = await generateUniqueOTP();
 
   // Use authenticated user's ID as clientId (don't trust client-provided clientId)
   const booking = await BookingModel.create({
@@ -70,9 +74,10 @@ export async function POST(request: Request) {
     date,
     slot,
     note: note || '',
-    status: 'pending',
+    status: 'active',
     rejectionReason: '',
+    otp,
   });
-  
+
   return NextResponse.json({ data: booking }, { status: 201 });
 }
