@@ -2,34 +2,31 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { LawyerModel } from "@/models/Lawyer";
 import { UserModel } from "@/models/User";
-
-/**
- * TODO: Replace this with your real auth/session logic.
- * Must return the authenticated user's id string or null if unauthenticated.
- */
-async function getUserFromSession(request: Request): Promise<string | null> {
-  // Example: read Authorization header, verify JWT and return userId
-  // Replace with your implementation
-  return null;
-}
+import { verifyAuth, unauthorizedResponse } from "@/lib/apiAuth";
 
 export async function GET(request: Request) {
+  const authUser = await verifyAuth(request);
+  if (!authUser) {
+    return unauthorizedResponse();
+  }
+  const userId = authUser.id;
   await connectToDatabase();
-  const userId = await getUserFromSession(request);
-  if (!userId) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
   const lawyer = await LawyerModel.findOne({ userId }).lean();
   if (!lawyer) return NextResponse.json({ message: "Lawyer profile not found" }, { status: 404 });
 
-  const user = await UserModel.findById(userId, "name email city").lean();
+  const userProfile = await UserModel.findById(userId, "name email city").lean();
 
-  return NextResponse.json({ lawyer, user });
+  return NextResponse.json({ lawyer, user: userProfile });
 }
 
 export async function PUT(request: Request) {
+  const user = await verifyAuth(request);
+  if (!user) {
+    return unauthorizedResponse();
+  }
+  const userId = user.id;
   await connectToDatabase();
-  const userId = await getUserFromSession(request);
-  if (!userId) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
   const body = await request.json().catch(() => null);
   if (!body) return NextResponse.json({ message: "Invalid body" }, { status: 400 });

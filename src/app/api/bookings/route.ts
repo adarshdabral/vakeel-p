@@ -1,3 +1,37 @@
+export async function PATCH(request: Request) {
+  const user = await verifyAuth(request);
+  if (!user) {
+    return unauthorizedResponse();
+  }
+
+  await connectToDatabase();
+  const { id, status } = await request.json();
+  if (!id || !status) {
+    return NextResponse.json({ error: 'Missing id or status' }, { status: 400 });
+  }
+
+  // Only assigned lawyer (by userId) or admin can update status
+  const booking = await BookingModel.findById(id);
+  if (!booking) {
+    return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
+  }
+  let isAssignedLawyer = false;
+  if (user.role === 'lawyer') {
+    // Find the lawyer profile for this user
+    const { LawyerModel } = await import('@/models/Lawyer');
+    const lawyerProfile = await LawyerModel.findOne({ userId: user.id });
+    if (lawyerProfile && booking.lawyerId?.toString() === lawyerProfile._id.toString()) {
+      isAssignedLawyer = true;
+    }
+  }
+  const isAdmin = user.role === 'admin';
+  if (!isAssignedLawyer && !isAdmin) {
+    return forbiddenResponse('You do not have permission to update this booking');
+  }
+  booking.status = status;
+  await booking.save();
+  return NextResponse.json({ data: booking });
+}
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import { BookingModel } from '@/models/Booking';
@@ -16,27 +50,30 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const clientId = searchParams.get('clientId');
   const lawyerId = searchParams.get('lawyerId');
-  
+  let status = searchParams.get('status');
+  if (status) status = status.trim();
+
   let query: any = {};
-  
+  const { Types } = await import('mongoose');
+
   // Clients can only see their own bookings
   if (user.role === 'client') {
-    query.clientId = user.id;
+    query.clientId = Types.ObjectId.isValid(user.id) ? new Types.ObjectId(user.id) : user.id;
   } 
-  // Lawyers can only see bookings assigned to them
+  // Lawyers can see bookings assigned to them, or filter by lawyerId param
   else if (user.role === 'lawyer') {
     if (lawyerId) {
-      query.lawyerId = lawyerId;
+      query.lawyerId = Types.ObjectId.isValid(lawyerId) ? new Types.ObjectId(lawyerId) : lawyerId;
     } else {
-      // Will need lawyer's profile ID - for now allow lawyerId param
-      query.lawyerId = lawyerId;
+      query.lawyerId = Types.ObjectId.isValid(user.id) ? new Types.ObjectId(user.id) : user.id;
     }
   }
   // Admins can see all bookings
   else if (user.role === 'admin') {
-    if (clientId) query.clientId = clientId;
-    if (lawyerId) query.lawyerId = lawyerId;
+    if (clientId) query.clientId = Types.ObjectId.isValid(clientId) ? new Types.ObjectId(clientId) : clientId;
+    if (lawyerId) query.lawyerId = Types.ObjectId.isValid(lawyerId) ? new Types.ObjectId(lawyerId) : lawyerId;
   }
+  if (status) query.status = status;
 
   const bookings = await BookingModel.find(query).lean();
   return NextResponse.json({ data: bookings });
@@ -74,7 +111,7 @@ export async function POST(request: Request) {
     date,
     slot,
     note: note || '',
-    status: 'active',
+    status: 'pending',
     rejectionReason: '',
     otp,
   });
