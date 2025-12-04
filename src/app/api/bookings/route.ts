@@ -75,7 +75,9 @@ export async function GET(request: Request) {
   }
   if (status) query.status = status;
 
-  const bookings = await BookingModel.find(query).lean();
+  const bookings = await BookingModel.find(query)
+    .populate({ path: 'clientId', model: 'User', select: 'name email' })
+    .lean();
   return NextResponse.json({ data: bookings });
 }
 
@@ -115,6 +117,7 @@ export async function POST(request: Request) {
     rejectionReason: '',
     otp,
   });
+
 
   return NextResponse.json({ data: booking }, { status: 201 });
 }

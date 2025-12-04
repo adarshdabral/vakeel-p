@@ -30,6 +30,7 @@ interface AuthState {
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
   setInitialized: (value: boolean) => void;
+  restoreSession: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -92,6 +93,17 @@ export const useAuthStore = create<AuthState>()(
       },
       setInitialized: (value: boolean) => {
         set({ initialized: value });
+      },
+      restoreSession: async () => {
+        set({ status: 'loading', error: undefined });
+        try {
+          const res = await fetch('/api/auth/me', { credentials: 'include' });
+          if (!res.ok) throw new Error('Not authenticated');
+          const data = await res.json();
+          set({ user: data.user, status: 'authenticated' });
+        } catch (error) {
+          set({ user: null, status: 'idle', error: undefined });
+        }
       },
     }),
     {

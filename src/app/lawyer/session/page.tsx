@@ -72,7 +72,9 @@ export default function LawyerSessionsIndexPage() {
               <Card key={booking._id}>
                 <CardHeader>
                   <CardTitle>{booking.matter}</CardTitle>
-                  <CardDescription>Client #{booking.clientId}</CardDescription>
+                  <CardDescription>
+                    Client: {typeof booking.clientId === "object" ? booking.clientId.name : booking.clientId}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <p className="text-sm text-slate-500">Date: {booking.date}</p>
