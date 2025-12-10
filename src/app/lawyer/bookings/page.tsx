@@ -55,7 +55,7 @@ const LawyerBookingsPage = () => {
 			// Fetch lawyer profile to get lawyerId for refresh
 			const lawyerRes = await fetch("/api/lawyers/me", { credentials: "include" });
 			const lawyerData = await lawyerRes.json();
-			const lawyerId = lawyerData.lawyer?._id || user.id;
+			const lawyerId = lawyerData.lawyer?._id || user?.id;
 			const updated = await fetch(`/api/bookings?status=pending&lawyerId=${lawyerId}`, { credentials: "include" }).then((r) => r.json());
 			setBookings(Array.isArray(updated.data) ? updated.data : []);
 		} catch (err) {

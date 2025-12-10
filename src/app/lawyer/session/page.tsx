@@ -9,7 +9,7 @@ import { useNotificationStore } from '@/store/notification-store';
 type Booking = {
   _id: string;
   matter: string;
-  clientId: string;
+  clientId: string | { name?: string; email?: string; _id?: string };
   status: string;
   date: string;
   slot: string;

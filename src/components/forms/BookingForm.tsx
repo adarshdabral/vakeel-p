@@ -13,8 +13,12 @@ interface BookingFormProps {
 }
 
 export function BookingForm({ lawyer, onSubmit }: BookingFormProps) {
-  const [date, setDate] = useState(lawyer.availability?.dates?.[0] ?? '');
-  const [slot, setSlot] = useState(lawyer.availability?.slots?.[0] ?? '');
+  const availability = lawyer.availability;
+  const availableDates = Array.isArray(availability) ? [] : availability?.dates ?? [];
+  const availableSlots = Array.isArray(availability) ? availability : availability?.slots ?? [];
+  
+  const [date, setDate] = useState(availableDates[0] ?? '');
+  const [slot, setSlot] = useState(availableSlots[0] ?? '');
   const [notes, setNotes] = useState('');
   const [mode, setMode] = useState<'video' | 'phone'>('video');
   const [loading, setLoading] = useState(false);
@@ -31,7 +35,7 @@ export function BookingForm({ lawyer, onSubmit }: BookingFormProps) {
       <div className="space-y-2">
         <p className="text-sm font-medium text-accent">Preferred date</p>
         <div className="flex flex-wrap gap-2">
-          {lawyer.availability?.dates?.map((dateValue: string) => (
+          {availableDates.map((dateValue: string) => (
             <button
               type="button"
               key={dateValue}
@@ -52,7 +56,7 @@ export function BookingForm({ lawyer, onSubmit }: BookingFormProps) {
       <div className="space-y-2">
         <p className="text-sm font-medium text-accent">Preferred slot</p>
         <div className="flex flex-wrap gap-2">
-          {lawyer.availability?.slots?.map((slotValue: string) => (
+          {availableSlots.map((slotValue: string) => (
             <button
               type="button"
               key={slotValue}

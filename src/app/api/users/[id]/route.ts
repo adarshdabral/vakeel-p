@@ -3,12 +3,13 @@ import { connectToDatabase } from '@/lib/db';
 import { UserModel } from '@/models/User';
 
 type Params = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export async function GET(_request: Request, { params }: Params) {
   await connectToDatabase();
-  const user = await UserModel.findById(params.id).lean();
+  const { id } = await params;
+  const user = await UserModel.findById(id).lean();
   if (!user) {
     return NextResponse.json({ message: 'User not found' }, { status: 404 });
   }

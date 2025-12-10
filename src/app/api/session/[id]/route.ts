@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { connectToDatabase } from '@/lib/db';
 import { BookingModel } from '@/models/Booking';
+import { CallModel } from '@/models/Call';
 import { verifyAuth } from '@/lib/apiAuth';
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -23,6 +24,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   if (booking.otp !== otp) {
     return NextResponse.json({ success: false, error: 'Invalid OTP' }, { status: 401 });
   }
+
+  // Note: Call document will be created when the actual WebRTC call starts (when lawyer clicks "Start Call"),
+  // not at OTP verification. This ensures we only track actual calls that occur.
 
   // Identify caller role to craft redirect path
   const user = await verifyAuth(request);

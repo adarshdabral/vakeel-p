@@ -11,9 +11,10 @@ export function Calendar({ selected, onSelect, mode = "multiple" }: {
     <DayPicker
       mode={mode}
       selected={selected}
-      onSelect={onSelect}
+      onSelect={(dates: Date[] | undefined) => onSelect(dates || [])}
       showOutsideDays
       fixedWeeks
+      required={false}
     />
   );
 }

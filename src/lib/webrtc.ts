@@ -5,9 +5,11 @@ export const defaultRtcConfig: RTCConfiguration = {
 export function createPeerConnection({
   onTrack,
   onIceCandidate,
+  onConnectionStateChange,
 }: {
   onTrack?: (event: RTCTrackEvent) => void;
   onIceCandidate?: (event: RTCPeerConnectionIceEvent) => void;
+  onConnectionStateChange?: () => void;
 }) {
   const peer = new RTCPeerConnection(defaultRtcConfig);
 
@@ -16,6 +18,10 @@ export function createPeerConnection({
   }
   if (onIceCandidate) {
     peer.onicecandidate = onIceCandidate;
+  }
+
+  if (onConnectionStateChange) {
+    peer.onconnectionstatechange = onConnectionStateChange;
   }
 
   return peer;

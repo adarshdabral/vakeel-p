@@ -16,14 +16,14 @@ export function LawyerCard({ lawyer, onSelect, showProfileLink = true }: LawyerC
       <CardHeader>
         <div className="flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold">
-            {lawyer.name
+            {(lawyer.name ?? 'L')
               .split(' ')
               .map((word) => word[0])
               .join('')}
           </div>
           <div>
-            <CardTitle>{lawyer.name}</CardTitle>
-            <CardDescription>{lawyer.specialization}</CardDescription>
+            <CardTitle>{lawyer.name ?? 'Unknown Lawyer'}</CardTitle>
+            <CardDescription>{lawyer.specialization ?? 'General Practice'}</CardDescription>
           </div>
           {lawyer.verified ? <CheckCircle2 className="ml-auto h-5 w-5 text-emerald-500" /> : null}
         </div>
@@ -48,9 +48,9 @@ export function LawyerCard({ lawyer, onSelect, showProfileLink = true }: LawyerC
             <span className="font-medium text-accent">Languages:</span> {lawyer.languages.join(', ')}
           </div>
         ) : null}
-        {lawyer.availability?.length ? (
+        {lawyer.availability && (Array.isArray(lawyer.availability) ? lawyer.availability.length : lawyer.availability.slots?.length) ? (
           <div className="mt-3 flex flex-wrap gap-2">
-            {lawyer.availability.map((slot) => (
+            {(Array.isArray(lawyer.availability) ? lawyer.availability : lawyer.availability.slots).map((slot) => (
               <span key={slot} className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-accent">
                 {slot}
               </span>

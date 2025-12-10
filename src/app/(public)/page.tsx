@@ -41,13 +41,13 @@ export default function LandingPage() {
   const filteredLawyers = useMemo(() => {
     return lawyers
       .filter((lawyer) => {
-        const matchesName = lawyer.name.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesCategory = lawyer.specialization.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesName = (lawyer.name ?? '').toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesCategory = (lawyer.specialization ?? '').toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCityInput = (lawyer.city ?? '').toLowerCase().includes(searchTerm.toLowerCase());
 
         const matchesSearch = searchTerm ? matchesName || matchesCategory || matchesCityInput : true;
         const matchesCity = selectedCity === 'all' ? true : lawyer.city?.toLowerCase() === selectedCity.toLowerCase();
-        const categoryValue = (lawyer.category ?? lawyer.specialization).toLowerCase();
+        const categoryValue = ((lawyer.category ?? lawyer.specialization) ?? '').toLowerCase();
         const matchesCategoryFilter =
           selectedCategory === 'all' ? true : categoryValue === selectedCategory.toLowerCase();
 
