@@ -55,21 +55,39 @@ export default function LawyerCallPage({ params }: PageProps) {
     socketInstance.connect();
     setSocket(socketInstance);
 
-    socketInstance.on('connect', () => {
+    socketInstance.on('connect', async () => {
       setCallState('ringing');
       pushToast({ variant: 'success', title: 'Connected to call' });
+      
+      // Create call document when user joins (if it doesn't exist)
+      if (!callId) {
+        try {
+          const response = await fetch('/api/calls', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              bookingId: sessionId,
+              roomId: `booking:${sessionId}`,
+            }),
+          });
+          if (response.ok) {
+            const { data } = await response.json();
+            setCallId(data._id);
+          }
+        } catch (err) {
+          console.error('Error creating call:', err);
+        }
+      }
     });
-    
+
     socketInstance.on('user:joined', ({ userId, role }) => {
-      pushToast({ variant: 'info', title: `${role === 'lawyer' ? 'Lawyer' : 'Client'} joined the session` });
+      pushToast({ variant: 'info', title: `${role === 'lawyer' ? 'Lawyer' : 'Client'} joined the call` });
     });
 
     socketInstance.on('connect_error', (err) => {
       console.error('Socket connect_error (lawyer):', err);
       pushToast({ variant: 'error', title: 'Connection failed', description: err?.message || String(err) });
     });
-
-    // Create peer connection
     const pc = createPeerConnection({
       onTrack: (event) => {
         // Some browsers deliver MediaStream in event.streams, others only provide event.track
@@ -89,12 +107,26 @@ export default function LawyerCallPage({ params }: PageProps) {
           socketInstance.emit('call:ice', { candidate: event.candidate });
         }
       },
-      onConnectionStateChange: () => {
+      onConnectionStateChange: async () => {
         console.log('Connection state:', pc.connectionState);
         if (pc.connectionState === 'failed') {
           pushToast({ variant: 'error', title: 'Connection failed', description: 'Attempting to reconnect...' });
         } else if (pc.connectionState === 'connected') {
+          setCallState('live');
           pushToast({ variant: 'success', title: 'Connection established' });
+          
+          // Update call status in database
+          if (callId) {
+            try {
+              await fetch(`/api/calls/${callId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'active' }),
+              });
+            } catch (err) {
+              console.error('Error updating call status:', err);
+            }
+          }
         }
       },
     });
@@ -162,6 +194,16 @@ export default function LawyerCallPage({ params }: PageProps) {
       cleanup();
     };
   }, [token, bookingId, pushToast, setCallState, setPeerConnection, setSocket, setLocalStream, setRemoteStream, endCall, cleanup]);
+
+  // Add participant when callId is set
+  useEffect(() => {
+    if (callId) {
+      fetch(`/api/calls/${callId}/participants`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+  }, [callId]);
 
   return (
     <section className="grid gap-6 lg:grid-cols-[2fr,1fr]">

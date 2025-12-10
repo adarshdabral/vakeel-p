@@ -17,10 +17,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing bookingId or roomId' }, { status: 400 });
     }
 
-    // Optional: Check if user is participant in the booking
-    // For now, allow any authenticated user to create (will be restricted later)
+    // Check if a call already exists for this roomId
+    let call = await CallModel.findOne({ roomId });
+    
+    if (call) {
+      // Call already exists, return it
+      return NextResponse.json({ data: call }, { status: 200 });
+    }
 
-    const call = await CallModel.create({
+    // Create a new call if one doesn't exist
+    call = await CallModel.create({
       bookingId,
       roomId,
       status: 'created',
