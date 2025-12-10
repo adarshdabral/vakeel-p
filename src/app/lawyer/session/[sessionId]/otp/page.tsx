@@ -1,11 +1,9 @@
 'use client';
 
-import { useEffect, use } from 'react';
+import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import { OTPInput } from '@/components/forms/OTPInput';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
-import { sessions } from '@/data/mock';
-import { useSessionStore } from '@/store/session-store';
 import { useNotificationStore } from '@/store/notification-store';
 
 interface PageProps {
@@ -16,22 +14,39 @@ export default function LawyerSessionOtpPage({ params }: PageProps) {
   const router = useRouter();
   const { sessionId } = use(params);
   const pushToast = useNotificationStore((state) => state.pushToast);
-  const setSession = useSessionStore((state) => state.setSession);
-  const verifyOtp = useSessionStore((state) => state.verifyOtp);
-  const session = sessions.find((entry) => entry.id === sessionId);
 
-  useEffect(() => {
-    if (session) {
-      setSession(session.id, session.bookingId);
-    }
-  }, [session, setSession]);
+  const handleVerify = async (code: string) => {
+    try {
+      const res = await fetch(`/api/session/${sessionId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ otp: code })
+      });
 
-  const handleVerify = (code: string) => {
-    if (verifyOtp(code)) {
-      pushToast({ title: 'OTP matched', description: 'Launching client call.', variant: 'success' });
-      router.push(`/lawyer/session/${sessionId}/call`);
-    } else {
-      pushToast({ title: 'Incorrect OTP', description: 'Please re-check.', variant: 'error' });
+      const data = await res.json();
+
+      if (data.success) {
+        pushToast({
+          title: "OTP verified",
+          description: "Joining secure session...",
+          variant: "success"
+        });
+
+        // ⬅️ THE FIX: use backend-generated redirect URL WITH token
+        router.push(data.redirectUrl);
+      } else {
+        pushToast({
+          title: "Invalid OTP",
+          description: "Please re-check the code.",
+          variant: "error"
+        });
+      }
+    } catch (err) {
+      pushToast({
+        title: "Server Error",
+        description: "Could not verify OTP.",
+        variant: "error"
+      });
     }
   };
 

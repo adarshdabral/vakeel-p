@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { connectToDatabase } from '@/lib/db';
 import { BookingModel } from '@/models/Booking';
+import { verifyAuth } from '@/lib/apiAuth';
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   await connectToDatabase();
@@ -21,15 +24,29 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ success: false, error: 'Invalid OTP' }, { status: 401 });
   }
 
+  // Identify caller role to craft redirect path
+  const user = await verifyAuth(request);
+  const isLawyer = user?.role === 'lawyer';
+
+  if (!JWT_SECRET) {
+    return NextResponse.json({ error: 'JWT secret not configured' }, { status: 500 });
+  }
+
   // Create JWT for call room auth
   const token = jwt.sign(
-    { bookingId: booking._id, clientId: booking.clientId, lawyerId: booking.lawyerId },
-    process.env.NEXTAUTH_SECRET!,
+    {
+      bookingId: booking._id?.toString?.() ?? booking._id,
+      clientId: booking.clientId?.toString?.() ?? booking.clientId,
+      lawyerId: booking.lawyerId?.toString?.() ?? booking.lawyerId,
+      role: user?.role || 'client',
+    },
+    JWT_SECRET,
     { expiresIn: '1h' }
   );
 
+  const basePath = isLawyer ? '/lawyer/session' : '/user/session';
   return NextResponse.json({
     success: true,
-    redirectUrl: `/user/session/${bookingId}/call?token=${token}`
+    redirectUrl: `${basePath}/${bookingId}/call?token=${token}`,
   });
 }
