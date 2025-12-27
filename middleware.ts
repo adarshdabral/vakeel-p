@@ -9,6 +9,9 @@ const PUBLIC_PATHS = [
   '/auth/register',
   '/auth/reset-password',
   '/auth/verify',
+  '/api/auth/register',
+  '/api/auth/login',
+  '/api/auth/verify',
 ];
 
 

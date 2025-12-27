@@ -5,6 +5,9 @@ export function Popover({ children }: { children: React.ReactNode }) {
 }
 
 export function PopoverTrigger({ asChild, children, ...props }: any) {
+  if (asChild) {
+    return children;
+  }
   return <button {...props}>{children}</button>;
 }
 
