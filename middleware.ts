@@ -12,6 +12,11 @@ const PUBLIC_PATHS = [
   '/api/auth/register',
   '/api/auth/login',
   '/api/auth/verify',
+  '/api/auth/me',
+  '/api/auth/logout',
+  '/api/lawyers',
+  '/about',
+  '/contact',
 ];
 
 

@@ -1,10 +1,13 @@
-import { use } from 'react';
+'use client';
+
+import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { CheckCircle2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { lawyers, sessions } from '@/data/mock';
+import { apiClient } from '@/lib/axios';
+import { useAuthStore } from '@/store/auth-store';
 
 interface PageProps {
   params: Promise<{ lawyerId: string }>;
@@ -12,9 +15,43 @@ interface PageProps {
 
 export default function ConfirmationPage({ params }: PageProps) {
   const { lawyerId } = use(params);
-  const lawyer = lawyers.find((entry) => entry.id === lawyerId);
-  if (!lawyer) notFound();
-  const session = sessions[0];
+  const [lawyer, setLawyer] = useState<any>(null);
+  const [latestBooking, setLatestBooking] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const user = useAuthStore((state) => state.user);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        // Fetch lawyer details
+        const lawyerRes = await apiClient.get(`/api/lawyers/${lawyerId}`);
+        setLawyer(lawyerRes.data.data);
+
+        // Fetch user's latest booking with this lawyer
+        if (user?.id) {
+          const bookingsRes = await apiClient.get('/api/bookings', {
+            params: { clientId: user.id, lawyerId: lawyerId }
+          });
+          const bookings = bookingsRes.data.data || [];
+          // Get the most recent booking
+          if (bookings.length > 0) {
+            setLatestBooking(bookings[bookings.length - 1]);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching confirmation data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [lawyerId, user?.id]);
+
+  if (loading) {
+    return <p className="text-slate-500">Loading confirmation...</p>;
+  }
+
+  if (!lawyer) return notFound();
 
   return (
     <section className="space-y-6">
@@ -27,15 +64,17 @@ export default function ConfirmationPage({ params }: PageProps) {
       </header>
       <Card className="mx-auto max-w-2xl">
         <CardHeader>
-          <CardTitle>{lawyer.name}</CardTitle>
-          <CardDescription>Session ID: {session.id}</CardDescription>
+          <CardTitle>{lawyer.user?.name || lawyer.name}</CardTitle>
+          <CardDescription>Booking ID: {latestBooking?._id || 'N/A'}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-slate-500">OTP will be available 15 minutes before the call.</p>
           <div className="flex flex-wrap gap-3">
-            <Button asChild>
-              <Link href={`/user/session/${session.id}/otp`}>View OTP</Link>
-            </Button>
+            {latestBooking && (
+              <Button asChild>
+                <Link href={`/user/session/${latestBooking._id}/otp`}>View OTP</Link>
+              </Button>
+            )}
             <Button asChild variant="secondary">
               <Link href="/user/bookings">View all bookings</Link>
             </Button>

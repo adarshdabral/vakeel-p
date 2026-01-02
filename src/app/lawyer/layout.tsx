@@ -8,11 +8,15 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 export default function LawyerLayout({ children }: { children: ReactNode }) {
   return (
     <ProtectedRoute requiredRole="lawyer">
-      <div className="min-h-screen bg-secondary/60">
+      <div className="min-h-screen bg-slate-50/50">
         <LawyerNavbar />
-        <div className="mx-auto flex max-w-7xl">
+        <div className="flex">
           <LawyerSidebar />
-          <main className="flex-1 space-y-6 px-8 py-10">{children}</main>
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 animate-fade-in">
+            <div className="mx-auto max-w-5xl space-y-6">
+              {children}
+            </div>
+          </main>
         </div>
       </div>
     </ProtectedRoute>

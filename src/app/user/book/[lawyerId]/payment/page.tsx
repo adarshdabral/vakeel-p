@@ -1,10 +1,9 @@
 'use client';
 
-import { use } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { lawyers } from '@/data/mock';
 import { apiClient } from '@/lib/axios';
 import { useNotificationStore } from '@/store/notification-store';
 
@@ -16,16 +15,35 @@ export default function PaymentPage({ params }: PageProps) {
   const router = useRouter();
   const pushToast = useNotificationStore((state) => state.pushToast);
   const { lawyerId } = use(params);
-  const lawyer = lawyers.find((entry) => entry.id === lawyerId);
+  const [lawyer, setLawyer] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchLawyer() {
+      try {
+        const res = await apiClient.get(`/api/lawyers/${lawyerId}`);
+        setLawyer(res.data.data);
+      } catch (error) {
+        setLawyer(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchLawyer();
+  }, [lawyerId]);
+
+  if (loading) {
+    return <p className="text-slate-500">Loading payment details...</p>;
+  }
 
   if (!lawyer) {
     return <p className="text-slate-500">We could not find that lawyer.</p>;
   }
 
   const handlePay = async () => {
-    await apiClient.post('/api/payment', { lawyerId: lawyer.id, amount: lawyer.price });
+    await apiClient.post('/api/payment', { lawyerId: lawyer._id || lawyerId, amount: lawyer.price });
     pushToast({ title: 'Payment successful', description: 'Receipt emailed to you.', variant: 'success' });
-    router.push(`/user/book/${lawyer.id}/confirmation`);
+    router.push(`/user/book/${lawyerId}/confirmation`);
   };
 
   return (
@@ -42,7 +60,7 @@ export default function PaymentPage({ params }: PageProps) {
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between text-sm">
             <span>Lawyer</span>
-            <span className="font-medium text-accent">{lawyer.name}</span>
+            <span className="font-medium text-accent">{lawyer.user?.name || lawyer.name}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span>Amount</span>

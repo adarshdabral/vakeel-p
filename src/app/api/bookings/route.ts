@@ -1,37 +1,3 @@
-export async function PATCH(request: Request) {
-  const user = await verifyAuth(request);
-  if (!user) {
-    return unauthorizedResponse();
-  }
-
-  await connectToDatabase();
-  const { id, status } = await request.json();
-  if (!id || !status) {
-    return NextResponse.json({ error: 'Missing id or status' }, { status: 400 });
-  }
-
-  // Only assigned lawyer (by userId) or admin can update status
-  const booking = await BookingModel.findById(id);
-  if (!booking) {
-    return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
-  }
-  let isAssignedLawyer = false;
-  if (user.role === 'lawyer') {
-    // Find the lawyer profile for this user
-    const { LawyerModel } = await import('@/models/Lawyer');
-    const lawyerProfile = await LawyerModel.findOne({ userId: user.id });
-    if (lawyerProfile && booking.lawyerId?.toString() === lawyerProfile._id.toString()) {
-      isAssignedLawyer = true;
-    }
-  }
-  const isAdmin = user.role === 'admin';
-  if (!isAssignedLawyer && !isAdmin) {
-    return forbiddenResponse('You do not have permission to update this booking');
-  }
-  booking.status = status;
-  await booking.save();
-  return NextResponse.json({ data: booking });
-}
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import { BookingModel } from '@/models/Booking';
@@ -120,4 +86,43 @@ export async function POST(request: Request) {
 
 
   return NextResponse.json({ data: booking }, { status: 201 });
+}
+
+// PATCH /api/bookings - Update booking status
+export async function PATCH(request: Request) {
+  const user = await verifyAuth(request);
+  if (!user) {
+    return unauthorizedResponse();
+  }
+
+  await connectToDatabase();
+  const { id, status } = await request.json();
+  if (!id || !status) {
+    return NextResponse.json({ error: 'Missing id or status' }, { status: 400 });
+  }
+
+  // Only assigned lawyer (by userId) or admin can update status
+  const booking = await BookingModel.findById(id);
+  if (!booking) {
+    return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
+  }
+  
+  let isAssignedLawyer = false;
+  if (user.role === 'lawyer') {
+    // Find the lawyer profile for this user
+    const { LawyerModel } = await import('@/models/Lawyer');
+    const lawyerProfile = await LawyerModel.findOne({ userId: user.id });
+    if (lawyerProfile && booking.lawyerId?.toString() === lawyerProfile._id.toString()) {
+      isAssignedLawyer = true;
+    }
+  }
+  
+  const isAdmin = user.role === 'admin';
+  if (!isAssignedLawyer && !isAdmin) {
+    return forbiddenResponse('You do not have permission to update this booking');
+  }
+  
+  booking.status = status;
+  await booking.save();
+  return NextResponse.json({ data: booking });
 }

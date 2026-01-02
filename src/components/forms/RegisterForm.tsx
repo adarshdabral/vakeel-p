@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useAuthStore } from '@/store/auth-store';
 import { useNotificationStore } from '@/store/notification-store';
+import { User, Mail, Lock, Loader2 } from 'lucide-react';
 
 interface RegisterFormProps {
   role: 'client' | 'lawyer';
@@ -43,28 +44,61 @@ export function RegisterForm({ role }: RegisterFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-accent">Full name</label>
-        <Input required name="name" placeholder="Aisha Khan" value={form.name} onChange={handleChange} />
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-slate-700">Full name</label>
+        <div className="relative">
+          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <Input 
+            required 
+            name="name" 
+            placeholder="Aisha Khan" 
+            value={form.name} 
+            onChange={handleChange} 
+            className="pl-10"
+          />
+        </div>
       </div>
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-accent">Email</label>
-        <Input required name="email" type="email" placeholder="you@vakeel.pro" value={form.email} onChange={handleChange} />
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-slate-700">Email address</label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <Input 
+            required 
+            name="email" 
+            type="email" 
+            placeholder="you@vakeel.pro" 
+            value={form.email} 
+            onChange={handleChange} 
+            className="pl-10"
+          />
+        </div>
       </div>
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-accent">Password</label>
-        <Input
-          required
-          name="password"
-          type="password"
-          placeholder="Create a strong password"
-          value={form.password}
-          onChange={handleChange}
-        />
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-slate-700">Password</label>
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <Input
+            required
+            name="password"
+            type="password"
+            placeholder="Create a strong password"
+            value={form.password}
+            onChange={handleChange}
+            className="pl-10"
+          />
+        </div>
+        <p className="text-xs text-slate-500">Must be at least 8 characters</p>
       </div>
-      <Button className="w-full" type="submit" disabled={loading}>
-        {loading ? 'Creating account…' : 'Create account'}
+      <Button className="w-full h-11" type="submit" disabled={loading}>
+        {loading ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Creating account...
+          </>
+        ) : (
+          'Create account'
+        )}
       </Button>
     </form>
   );
