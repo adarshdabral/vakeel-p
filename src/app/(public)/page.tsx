@@ -101,7 +101,7 @@ export default function LandingPage() {
               India&apos;s fastest way to book <span className="text-primary">verified lawyers</span>
             </h1>
             <p className="text-lg text-slate-600 leading-relaxed">
-              Vakeel Pro connects clients, lawyers, and admins on a single secure workspace with OTP protected video calls,
+              Vakil connects clients, lawyers, and admins on a single secure workspace with OTP protected video calls,
               intuitive bookings, and role-aware dashboards.
             </p>
             <div className="flex flex-wrap gap-4 pt-2">
@@ -141,14 +141,14 @@ export default function LandingPage() {
               <div className="flex items-center justify-between rounded-2xl bg-white/15 backdrop-blur-sm px-4 py-3">
                 <div>
                   <p className="text-sm text-white/70">Next session</p>
-                  <p className="text-lg font-semibold">Adv. Aisha Khan</p>
+                  <p className="text-lg font-semibold">Your Best Lawyer</p>
                 </div>
                 <span className="rounded-full bg-white/20 px-3 py-1.5 text-xs font-medium">10:00 AM</span>
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="rounded-2xl bg-white/15 backdrop-blur-sm px-4 py-3">
                   <p className="text-white/70">OTP</p>
-                  <p className="text-xl font-bold tracking-widest">123456</p>
+                  <p className="text-xl font-bold tracking-widest">******</p>
                 </div>
                 <div className="rounded-2xl bg-white/15 backdrop-blur-sm px-4 py-3">
                   <p className="text-white/70">Status</p>
@@ -239,7 +239,7 @@ export default function LandingPage() {
         {/* Features Section */}
         <section className="space-y-6">
           <div className="text-center space-y-2">
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">Why choose Vakeel Pro?</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">Why choose Vakil?</h2>
             <p className="text-slate-500">Everything you need for seamless legal consultations</p>
           </div>
           <div className="grid gap-5 sm:grid-cols-2">
@@ -264,7 +264,7 @@ export default function LandingPage() {
         <section className="rounded-3xl bg-gradient-to-br from-primary to-primary/90 p-8 sm:p-12 text-center text-white">
           <h2 className="text-2xl sm:text-3xl font-bold mb-4">Ready to get started?</h2>
           <p className="text-white/80 max-w-xl mx-auto mb-6">
-            Join thousands of clients who trust Vakeel Pro for their legal consultations. Sign up today and connect with verified lawyers instantly.
+            Join thousands of clients who trust Vakil for their legal consultations. Sign up today and connect with verified lawyers instantly.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Button asChild size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90">
