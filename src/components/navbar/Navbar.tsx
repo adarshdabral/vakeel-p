@@ -15,7 +15,7 @@ interface NavLink {
 const publicLinks: NavLink[] = [
   { label: 'About', href: '/about' },
   { label: 'Contact', href: '/contact' },
-  { label: 'Lawyers', href: '/user/lawyers' },
+  // { label: 'Lawyers', href: '/user/lawyers' },
 ];
 
 export function PublicNavbar() {
@@ -27,9 +27,9 @@ export function PublicNavbar() {
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-white font-bold text-sm">
-              VP
+              PV
             </div>
-            <span className="font-semibold text-lg text-slate-900 hidden sm:block">Vakeel Pro</span>
+            <span className="font-semibold text-lg text-slate-900 hidden sm:block">Perfect Vakeel</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -46,14 +46,14 @@ export function PublicNavbar() {
           </div>
 
           {/* Desktop Auth Buttons */}
-          <div className="hidden md:flex items-center gap-3">
+          {/* <div className="hidden md:flex items-center gap-3">
             <Button asChild variant="ghost" size="sm">
               <Link href="/auth/login">Sign in</Link>
             </Button>
             <Button asChild size="sm">
               <Link href="/auth/register">Get started</Link>
             </Button>
-          </div>
+          </div> */}
 
           {/* Mobile Menu Button */}
           <button
